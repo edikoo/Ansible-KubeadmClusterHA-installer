@@ -1,0 +1,5 @@
+.vscode/
+.infracost/
+playbooks/join_masters.sh
+playbooks/join_workers.sh
+playbooks/kubeadm_init_output.log

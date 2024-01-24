@@ -1,0 +1,3 @@
+---
+keepalived_enabled: true
+keepalived_virtual_ip: 10.80.24.143

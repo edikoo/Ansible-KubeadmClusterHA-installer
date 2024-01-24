@@ -1,0 +1,57 @@
+---
+- name: Preliminary check for HAProxy service status
+  block:
+    - name: Gather facts about services
+      ansible.builtin.service_facts:
+
+    - name: Set flag if HAProxy is already running
+      set_fact:
+        haproxy_already_running: true
+      when: "'haproxy' in services and services['haproxy'].state == 'running'"
+      # This tag ensures this task is always executed
+      tags: always
+
+    - name: Set flag if HAProxy is not running
+      set_fact:
+        haproxy_already_running: false
+      when: "'haproxy' not in services or services['haproxy'].state != 'running'"
+
+- name: Configure HAProxy on servers if not already running
+  when: not haproxy_already_running
+  block:
+    - name: Gather master nodes info
+      set_fact:
+        master_nodes: "{{ groups['master'] }}"
+
+    - name: Fetch IP addresses for master nodes
+      set_fact:
+        master_ips: "{{ hostvars[item]['ansible_host'] }}"
+      with_items: "{{ master_nodes }}"
+      register: ips
+
+    - name: Generate backend servers list for HAProxy configuration
+      set_fact:
+        haproxy_backend_servers: "{{ ips.results | map(attribute='ansible_facts.master_ips') | list }}"
+
+    - name: Set hostname on hosts
+      ansible.builtin.hostname:
+        name: "{{ hostname }}"
+        
+    - name: Install HAProxy
+      apt:
+        name: haproxy
+        state: present
+        update_cache: yes
+
+    - name: Configure HAProxy
+      template:
+        src: haproxy.cfg.j2
+        dest: /etc/haproxy/haproxy.cfg
+      notify:
+        - restart haproxy
+
+    - name: Ensure HAProxy is running and enabled
+      service:
+        name: haproxy
+        state: started
+        enabled: yes

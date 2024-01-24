@@ -1,0 +1,10 @@
+---
+- name: Check if the keepalived service is running
+  block:
+    - name: Gather facts about services
+      ansible.builtin.service_facts:
+
+    - name: Set flag if Keepalived is not running
+      fail:
+        msg: "Error: The keepalived service is not running."
+      when: "'keepalived' not in services or services['keepalived'].state != 'running'"

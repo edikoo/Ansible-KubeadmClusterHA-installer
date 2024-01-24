@@ -1,0 +1,150 @@
+---
+- name: Check if Kubernetes cluster is running
+  ansible.builtin.command: kubectl --kubeconfig /etc/kubernetes/admin.conf cluster-info
+  ignore_errors: true
+  register: k8s_cluster_info
+  changed_when: false
+
+- name: Check result
+  ansible.builtin.debug:
+    msg: "Kubernetes cluster is {{ 'running' if k8s_cluster_info.rc == 0 else 'not running' }}"
+    # var: k8s_cluster_info
+
+- name: Creating the Cluster
+  when: k8s_cluster_info.rc != 0
+  block:
+    # - name: Fetch images
+    #   ansible.builtin.command: kubeadm config images pull
+    #   changed_when: true
+
+    - name: Initialise the K8S cluster
+      ansible.builtin.command:
+        kubeadm init \
+            --control-plane-endpoint={{ control_plane_endpoint }} \
+            --kubernetes-version={{ kubernetes_version }} \
+            --upload-certs \
+            --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_host'] }} \
+            --pod-network-cidr={{ pod_network_cidr }}
+
+      register: kubeadm_init
+      changed_when: true
+
+    - name: Save 'kubeadm init' output to a file
+      ansible.builtin.shell: |
+        echo "{{ kubeadm_init.stdout }}" > /tmp/kubeadm_init_output.log
+        echo "{{ kubeadm_init.stderr }}" >> /tmp/kubeadm_init_output.log
+      when: kubeadm_init.rc == 0
+      changed_when: true
+
+    - name: Creating the required directories
+      file:
+        path: "$HOME/.kube"
+        state: directory
+        mode: '0755'  # Sets the permissions of the directory
+          #- "sudo chown $(id -u):$(id -g) $HOME/.kube/config"
+      register: KubeAdm_Commands_status
+      when: kubeadm_init.rc == 0
+      changed_when: true
+
+    - name: KubeAdm Commands Status
+      debug:
+            msg: "{{ KubeAdm_Commands_status }}"
+      when: kubeadm_init.rc == 0
+      changed_when: true
+
+    # Copying the required stuff after Kubeadm init successful
+    - name: Copy command of KubeAdm
+      shell:
+        cmd: sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+      register: KubeAdm_CP_Commands_status
+      when: kubeadm_init.rc == 0
+      changed_when: true
+
+    - name: KubeAdm Copy Commands Status
+      debug:
+            msg: "{{ KubeAdm_CP_Commands_status }}"
+      when: kubeadm_init.rc == 0
+      changed_when: true
+
+    # Changing the ownership of the directories
+    - name: Changing ownership of directories
+      shell:
+        cmd: sudo chown $(id -u):$(id -g) $HOME/.kube/config
+      register: KubeAdm_Chaning_Ownership_Commands_status
+      when: kubeadm_init.rc == 0
+      changed_when: true
+
+    - name: KubeAdm Changing ownership Commands Status
+      debug:
+            msg: "{{ KubeAdm_Chaning_Ownership_Commands_status }}"
+      when: kubeadm_init.rc == 0
+      changed_when: true
+
+    - name: Create alias as k
+      ansible.builtin.shell: |
+        echo "alias k=kubectl" >> .bashrc
+      when: kubeadm_init.rc == 0
+      changed_when: true
+
+    - name: Install CNI
+      ansible.builtin.shell: |
+        kubectl create -f {{ cni }}
+        sleep 30
+      when: kubeadm_init.rc == 0
+      changed_when: true
+
+    # - name: Install Metrics Server
+    #   ansible.builtin.shell: |
+    #     kubectl apply -f {{ metrics_server }}
+    #     sleep 20
+    #   changed_when: kubeadm_init.rc == 0
+
+
+    # ====== Create K8S Cluster Joining script ==========
+    - name: Fetch cluster joining text file
+      ansible.builtin.fetch:
+        src: /tmp/kubeadm_init_output.log
+        dest: kubeadm_init_output.log
+        flat: true
+
+  # The following will create the join command for your additional controllers.:
+  # echo $(kubeadm token create --print-join-command) --control-plane --certificate-key $(kubeadm init phase upload-certs --upload-certs | grep -vw -e certificate -e Namespace)
+
+    # ====== Create K8S Cluster Joining Other master nodes script ==========
+    - name: Create K8S Cluster Joining script for Master Nodes
+      block:
+        - name: Generate certificate key
+          ansible.builtin.shell: |
+            kubeadm init phase upload-certs --upload-certs 2>/dev/null | grep -vw -e certificate -e Namespace
+          register: certificate_key_output
+          when: kubeadm_init.rc == 0
+          changed_when: true
+
+        - name: Create cluster joining script for master nodes
+          ansible.builtin.shell: |
+            join_command=$(kubeadm token create --print-join-command 2>/dev/null)
+            certificate_key={{ certificate_key_output.stdout }}
+            echo "${join_command} --control-plane --certificate-key ${certificate_key}" > /tmp/join_masters.sh
+            chmod a+x /tmp/join_masters.sh
+          changed_when: true
+
+        - name: Fetch cluster joining script for master nodes
+          ansible.builtin.fetch:
+            src: /tmp/join_masters.sh
+            dest: join_masters.sh
+            flat: true
+
+    # ====== Create K8S Cluster Joining worker nodes script ==========
+    - name: Create K8S Cluster Joining script for Worker Nodes
+      block:
+        - name: Create cluster joining script
+          ansible.builtin.shell: |
+            kubeadm token create --print-join-command > /tmp/join_workers.sh
+            chmod a+x /tmp/join_workers.sh
+          changed_when: true
+
+        - name: Fetch cluster joining script
+          ansible.builtin.fetch:
+            src: /tmp/join_workers.sh
+            dest: join_workers.sh
+            flat: true

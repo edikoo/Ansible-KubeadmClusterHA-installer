@@ -1,0 +1,20 @@
+---
+- name: Configure HAProxy and optionally Keepalived on HAProxy servers
+  hosts: haproxy
+  become: yes
+
+  pre_tasks:
+    - name: Check if Keepalived related variables are defined
+      any_errors_fatal: true #stop full playbook if error exist
+      fail:
+        msg: >-
+          Keepalived is enabled but one or more required variables
+          (keepalived_interface, keepalived_state, keepalived_priority) are not defined in inventory/hosts.yaml file. or
+          (keepalived_virtual_ip) is not defined in inventory/group_vars/haproxy.yml.
+      when: 
+        - keepalived_enabled is defined and keepalived_enabled
+        - (keepalived_interface is not defined) or (keepalived_state is not defined) or (keepalived_priority is not defined) or (keepalived_virtual_ip is not defined)
+        
+  roles:
+    - haproxy
+    - { role: keepalived, when: keepalived_enabled | default(false) }

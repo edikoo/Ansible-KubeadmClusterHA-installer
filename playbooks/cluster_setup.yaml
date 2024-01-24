@@ -1,0 +1,42 @@
+---
+# ====== Deploy common packages ==============
+- name: Deploy common packages
+  hosts: all:!haproxy
+  become: true
+  vars:
+    ansible_ssh_common_args: "-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
+  roles:
+    - commons
+    - configure-kernel
+    - containerd
+
+# ====== Setup & Configure Init Node ==============
+- name: Setup First Init Master
+  hosts: master[0] #get first master from masters group. called "Init master node"
+  become: true
+  vars:
+    ansible_ssh_common_args: "-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
+  roles:
+    - cluster-setup
+  tags: master_check
+
+
+# ==== Play to setup and configure k8s master nodes ==========
+- name: Join masters to cluster
+  hosts: master[1:] #get all master from masters group. except first master
+  become: true
+  # serial: #run scripts one by one 
+  #   - 1 
+  vars:
+    ansible_ssh_common_args: "-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
+  roles:
+    - join-masters
+
+# ==== Play to setup and configure k8s worker nodes ==========
+- name: Join workers to cluster
+  hosts: worker
+  become: true
+  vars:
+    ansible_ssh_common_args: "-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
+  roles:
+    - join-workers

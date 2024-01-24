@@ -1,0 +1,46 @@
+---
+- name: Preliminary check for Keepalived service status
+  block:
+    - name: Gather facts about services
+      ansible.builtin.service_facts:
+
+    - name: Set flag if Keepalived is already running
+      set_fact:
+        keepalived_already_running: true
+      when: "'keepalived' in services and services['keepalived'].state == 'running'"
+      # This tag ensures this task is always executed
+      tags: always
+
+    - name: Set flag if Keepalived is not running
+      set_fact:
+        keepalived_already_running: false
+      when: "'keepalived' not in services or services['keepalived'].state != 'running'"
+
+- name: Configure Keepalived on servers if not already running
+  when: not keepalived_already_running
+  block:
+
+    - name: Include pre-task checks
+      include_tasks: pre_checks.yaml
+
+    - name: Install HAProxy and Keepalived
+      apt:
+        name:
+          - keepalived
+        state: present
+
+    - name: Deploy Keepalived configuration
+      template:
+        src: keepalived.conf.j2
+        dest: /etc/keepalived/keepalived.conf
+      notify:
+        - restart keepalived
+
+    - name: Ensure Keepalived is running
+      service:
+        name: keepalived
+        state: started
+        enabled: yes
+
+- name: Include pre-task checks
+  include_tasks: post_checks.yaml

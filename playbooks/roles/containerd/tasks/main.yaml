@@ -1,0 +1,72 @@
+---
+- name: Install and configure Kubernetes and containerd
+  block:
+    # Enable docker repository
+    - name: Add Docker GPG key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker Repository
+      apt_repository:
+        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+        state: present
+
+    # Install containerd
+    - name: Install containerd
+      apt:
+        update_cache: yes
+        name: containerd.io
+        state: present
+
+    - name: Check containerd cgroup driver
+      shell: grep "SystemdCgroup = true" /etc/containerd/config.toml
+      register: cgroup_check
+      failed_when: false
+      changed_when: false
+      
+    # Configure containerd
+    - name: Configure containerd to use systemd cgroup
+      shell: |
+        containerd config default | sudo tee /etc/containerd/config.toml >/dev/null 2>&1
+        sed -i 's/SystemdCgroup \= false/SystemdCgroup \= true/g' /etc/containerd/config.toml
+      when: cgroup_check.rc != 0
+
+    # Restart and enable containerd
+    - name: Restart and enable containerd
+      systemd:
+        name: containerd
+        state: restarted
+        enabled: yes
+      when: cgroup_check.rc != 0
+
+    # Add Kubernetes Repository
+    - name: Add Kubernetes GPG Key
+      apt_key:
+        url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+        state: present
+
+    - name: Add Kubernetes Repository
+      apt_repository:
+        repo: "deb http://apt.kubernetes.io/ kubernetes-xenial main"
+        state: present
+
+    # Install Kubernetes components
+    - name: Install Kubernetes components
+      apt:
+        update_cache: yes
+        name:
+          - kubelet={{ kubelet_version }}
+          - kubeadm={{ kubeadm_version }}
+          - kubectl={{ kubectl_version }}
+        state: present
+
+    # Hold Kubernetes packages
+    - name: Hold Kubernetes packages
+      dpkg_selections:
+        name: "{{ item }}"
+        selection: hold
+      loop:
+        - kubelet
+        - kubeadm
+        - kubectl

@@ -1,0 +1,28 @@
+vrrp_script chk_haproxy {
+    script "/usr/bin/killall -0 haproxy"
+    user root
+    interval 2
+    weight 2
+}
+
+vrrp_instance LB_VIP {
+    interface {{ keepalived_interface }}
+    state {{ keepalived_state }}
+    priority {{ keepalived_priority }}
+    virtual_router_id 51
+    unicast_src_ip {{ ansible_host }} # Use ansible_host as the source IP
+
+    unicast_peer {
+        {% for host in groups['haproxy'] %}
+        {% if hostvars[host]['ansible_host'] != ansible_host %}
+        {{ hostvars[host]['ansible_host'] }}
+        {% endif %}
+        {% endfor %}
+    }
+    virtual_ipaddress {
+        {{ keepalived_virtual_ip }}
+    }
+    track_script {
+        chk_haproxy
+    }
+}

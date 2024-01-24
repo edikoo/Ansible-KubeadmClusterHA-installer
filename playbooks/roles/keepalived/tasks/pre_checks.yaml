@@ -1,0 +1,5 @@
+---
+- name: Pause for manual review of keepalived_virtual_ip
+  pause:
+    prompt: "The keepalived virtual ip is set to: {{ keepalived_virtual_ip }} Review and. Press enter to continue..."
+  when: keepalived_virtual_ip is defined

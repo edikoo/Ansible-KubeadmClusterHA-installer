@@ -1,0 +1,73 @@
+---
+- name: Check if nodes has joined the cluster already
+  ansible.builtin.stat:
+    path: /etc/kubernetes/admin.conf
+  ignore_errors: true
+  register: kubeconf_info
+
+- name: Check result
+  ansible.builtin.debug:
+    msg: "Node {{ ansible_host }} is {{ 'already a part of the cluster.' if kubeconf_info.stat.exists else 'not a part of the cluster.' }}"
+
+- name: Joining the K8S Cluster
+  when: not kubeconf_info.stat.exists
+  block:
+    - name: Check the join_cluster script availability
+      ansible.builtin.stat:
+        path: /tmp/join_masters.sh
+      register: file_result
+
+    - name: Copy the cluster joining script
+      when: not file_result.stat.exists
+      ansible.builtin.copy:
+        src: join_masters.sh
+        dest: /tmp/join_masters.sh
+        mode: '755'
+
+    - name: Adding master to the K8S cluster
+      ansible.builtin.command:
+        sh /tmp/join_masters.sh
+      register: cluster_join
+      changed_when: true
+
+    - name: Creating the required directories
+      file:
+        path: "$HOME/.kube"
+        state: directory
+        mode: '0755'
+      register: KubeAdm_Commands_status
+      changed_when: cluster_join.rc == 0
+
+    - name: KubeAdm Commands Status
+      debug:
+            msg: "{{ KubeAdm_Commands_status }}"
+
+    # Copying the required stuff after Kubeadm init successful
+    - name: Copy command of KubeAdm
+      shell:
+        cmd: sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+      register: KubeAdm_CP_Commands_status
+
+    - name: KubeAdm Copy Commands Status
+      debug:
+            msg: "{{ KubeAdm_CP_Commands_status }}"
+
+    # Changing the ownership of the directories
+    - name: Changing ownership of directories
+      shell:
+        cmd: sudo chown $(id -u):$(id -g) $HOME/.kube/config
+      register: KubeAdm_Chaning_Ownership_Commands_status
+
+    - name: KubeAdm Changing ownership Commands Status
+      debug:
+            msg: "{{ KubeAdm_Chaning_Ownership_Commands_status }}"
+
+    - name: Create alias as k
+      ansible.builtin.shell: |
+        echo "alias k=kubectl" >> .bashrc
+      changed_when: cluster_join.rc == 0
+
+    - name: Check result for cluster
+      ansible.builtin.debug:
+        msg: "Node {{ ansible_host }} has {{ 'joined the cluster.' if cluster_join.rc == 0 else 'failed to join the cluster.' }} "
+

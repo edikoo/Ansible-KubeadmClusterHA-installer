@@ -35,6 +35,8 @@
         dest: /etc/keepalived/keepalived.conf
       notify:
         - restart keepalived
+        - restart haproxy
+      changed_when: true  # Force this task to always report 'changed'
 
     - name: Ensure Keepalived is running
       service:

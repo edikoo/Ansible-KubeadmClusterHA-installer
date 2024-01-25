@@ -1,4 +1,9 @@
 ---
+- name: Update APT package cache (equivalent to apt-get update)
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600  # Optional: cache is considered valid for 1 hour
+    
 - name: Set hostname on hosts
   ansible.builtin.hostname:
     name: "{{ hostname }}"

@@ -1,13 +1,13 @@
 ---
-control_plane_endpoint: 10.80.24.143:6443 #HA ip address or virtual ip address or init master ip address
+control_plane_endpoint: 10.0.55.213:6443 #HA ip address or virtual ip address or init master ip address
 
 pod_network_cidr: 192.168.0.0/16
 
 cni: "https://raw.githubusercontent.com/projectcalico/calico/v3.26.0/manifests/calico.yaml"
 
-kubernetes_version: "1.27.2"
-kubelet_version: "1.27.2-00"
-kubeadm_version: "1.27.2-00"
-kubectl_version: "1.27.2-00"
+kubernetes_version: "1.29.1"
+kubelet_version: "1.29.1-1.1"
+kubeadm_version: "1.29.1-1.1"
+kubectl_version: "1.29.1-1.1"
 
 timezone: "Asia/Tbilisi"

@@ -25,8 +25,8 @@
 - name: Join masters to cluster
   hosts: master[1:] #get all master from masters group. except first master
   become: true
-  # serial: #run scripts one by one 
-  #   - 1 
+  serial: #run scripts one by one 
+    - 1 
   vars:
     ansible_ssh_common_args: "-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
   roles:

@@ -51,6 +51,9 @@
         repo: "deb http://apt.kubernetes.io/ kubernetes-xenial main"
         state: present
 
+    - name: Include tasks from upgrade-source-list-for-v1.29.yaml
+      include_tasks: upgrade-source-list-for-v1.29.yaml
+
     # Install Kubernetes components
     - name: Install Kubernetes components
       apt:

@@ -1,0 +1,28 @@
+- name: Download the GPG key for Kubernetes v1.29
+  ansible.builtin.get_url:
+    url: https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key
+    dest: /etc/apt/keyrings/v1.29-Release.key
+    mode: '0644'
+
+- name: Add Kubernetes Release Key to APT keyring
+  ansible.builtin.shell: |
+    gpg --dearmor /etc/apt/keyrings/v1.29-Release.key
+    mv /etc/apt/keyrings/v1.29-Release.key.gpg /etc/apt/keyrings/v1.29-kubernetes-apt-keyring.gpg
+  args:
+    creates: /etc/apt/keyrings/v1.29-kubernetes-apt-keyring.gpg  # This avoids re-running if the keyring already exists
+
+# Optional: Clean up, remove the downloaded key file
+- name: Remove downloaded Release.key file
+  ansible.builtin.file:
+    path: /etc/apt/keyrings/v1.29-Release.key
+    state: absent
+
+- name: Add Kubernetes v1.29 repository
+  apt_repository:
+    repo: 'deb [signed-by=/etc/apt/keyrings/v1.29-kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /'
+    state: present
+    filename: kubernetes-1.29
+
+- name: update apt cache
+  ansible.builtin.apt:
+    update_cache: yes

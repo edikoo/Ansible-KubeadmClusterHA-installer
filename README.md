@@ -10,6 +10,7 @@
 ## Structure
 
 - `roles/helm-setup`: Contains tasks, for setting up Helm.
+- `roles/argocd-setup`: Contains tasks, for setting up ArgoCD.
 - `roles/haproxy`: Contains tasks, templates, and handlers for setting up HAProxy.
 - `roles/keepalived`: Contains tasks, templates, and handlers for setting up Keepalived.
 - `roles/commons`: Contains common tasks such as setting the hostname, installing dependencies, disabling swap, and setting the timezone.
@@ -21,6 +22,7 @@
 - `haproxy_setup.yaml`: Main playbook to apply the HAProxy and Keepalived configuration.
 - `cluster_setup.yaml`: Main playbook for setting up the Kubernetes cluster using kubeadm.
 - `helm_setup.yaml`: Main playbook for setting up Helm.
+- `argocd_setup.yaml`: Main playbook for setting up ArgoCD.
 
 # Environment preparation:
 

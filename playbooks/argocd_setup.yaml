@@ -1,8 +1,8 @@
 ---
-- name: Helm setup playbook
-  hosts: master
+- name: Argocd setup playbook
+  hosts: master[0]
   become: true
   vars:
     ansible_ssh_common_args: "-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
   roles:
-    - helm-setup
+    - argocd-setup

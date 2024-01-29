@@ -18,9 +18,9 @@
 - `roles/cluster-setup`: Initializes the Kubernetes cluster using `kubeadm` and sets up the required configuration for the control plane and worker nodes.
 - `roles/join-masters`: Adds additional control plane nodes to the Kubernetes cluster.
 - `roles/join-workers`: Adds worker nodes to the Kubernetes cluster.
-- `haproxy_setup.yml`: Main playbook to apply the HAProxy and Keepalived configuration.
-- `cluster_setup.yml`: Main playbook for setting up the Kubernetes cluster using kubeadm.
-- `helm_setup.yml`: Main playbook for setting up Helm.
+- `haproxy_setup.yaml`: Main playbook to apply the HAProxy and Keepalived configuration.
+- `cluster_setup.yaml`: Main playbook for setting up the Kubernetes cluster using kubeadm.
+- `helm_setup.yaml`: Main playbook for setting up Helm.
 
 # Environment preparation:
 

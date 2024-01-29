@@ -1,0 +1,8 @@
+---
+- name: Helm install playbook
+  hosts: master
+  become: true
+  vars:
+    ansible_ssh_common_args: "-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
+  roles:
+    - helm-setup

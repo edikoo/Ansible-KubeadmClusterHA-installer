@@ -9,6 +9,7 @@
 
 ## Structure
 
+- `roles/helm-setup`: Contains tasks, for setting up Helm.
 - `roles/haproxy`: Contains tasks, templates, and handlers for setting up HAProxy.
 - `roles/keepalived`: Contains tasks, templates, and handlers for setting up Keepalived.
 - `roles/commons`: Contains common tasks such as setting the hostname, installing dependencies, disabling swap, and setting the timezone.
@@ -19,6 +20,7 @@
 - `roles/join-workers`: Adds worker nodes to the Kubernetes cluster.
 - `haproxy_setup.yml`: Main playbook to apply the HAProxy and Keepalived configuration.
 - `cluster_setup.yml`: Main playbook for setting up the Kubernetes cluster using kubeadm.
+- `helm_setup.yml`: Main playbook for setting up Helm.
 
 # Environment preparation:
 

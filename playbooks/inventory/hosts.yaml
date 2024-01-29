@@ -5,47 +5,47 @@ all:
     master:
       hosts:
         master-1:
-          ansible_host: 10.80.24.63
+          ansible_host: 10.0.55.205
           ansible_user: root
-          ansible_ssh_pass: admin
+          ansible_ssh_pass: 1qaz!QAZZZ
           hostname: master-1
         master-2:
-          ansible_host: 10.80.24.64
+          ansible_host: 10.0.55.206
           ansible_user: root
-          ansible_ssh_pass: admin
+          ansible_ssh_pass: 1qaz!QAZZZ
           hostname: master-2
         master-3:
-          ansible_host: 10.80.24.65
+          ansible_host: 10.0.55.207
           ansible_user: root
-          ansible_ssh_pass: admin
+          ansible_ssh_pass: 1qaz!QAZZZ
           hostname: master-3
     worker:
       hosts:
         worker-1:
-          ansible_host: 10.80.24.131
+          ansible_host: 10.0.55.208
           ansible_user: root
-          ansible_ssh_pass: admin
+          ansible_ssh_pass: 1qaz!QAZZZ
           hostname: worker-1
         worker-2:
-          ansible_host: 10.80.24.132
+          ansible_host: 10.0.55.209
           ansible_user: root
-          ansible_ssh_pass: admin
+          ansible_ssh_pass: 1qaz!QAZZZ
           hostname: worker-2
     haproxy:
       hosts:
         haproxy-1:
-          ansible_host: 10.80.24.141
+          ansible_host: 10.0.55.210
           ansible_user: root
-          ansible_ssh_pass: admin
+          ansible_ssh_pass: 1qaz!QAZZZ
           hostname: haproxy-1
-          keepalived_interface: eth1
+          keepalived_interface: ens160
           keepalived_state: MASTER
           keepalived_priority: 100
         haproxy-2:
-          ansible_host: 10.80.24.142
+          ansible_host: 10.0.55.212
           ansible_user: root
-          ansible_ssh_pass: admin
+          ansible_ssh_pass: 1qaz!QAZZZ
           hostname: haproxy-2
-          keepalived_interface: eth1
+          keepalived_interface: ens160
           keepalived_state: BACKUP
           keepalived_priority: 99

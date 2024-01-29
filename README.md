@@ -110,8 +110,35 @@ ansible-playbook -i inventory/hosts.yaml cluster_setup.yaml
 ```
 
 
-## Appendix
+# Appendix
+
+#### After successfully setting up your high availability Kubernetes cluster, you can further enhance your cluster by installing various tools. These tools adds powerful capabilities to your cluster . Here's a guide on how to proceed with these installations as optional steps:
 
 
-### if you use virtualbox and want to add new master node you need to specify --apiserver-advertise-address masterNodeIP example:
-#### kubeadm join 10.80.24.141:6443 --token 9a45rv.6panndt4icqu6anu --discovery-token-ca-cert-hash sha256:c89dbd80e863a8d274cb32b2ffb4cdca5debf3e78c7caf821165ff7eea872fb6  --control-plane --certificate-key 666ae3f464595535043f20a1f0b0769117dd901ab88430ba70c1478d2efd58da --apiserver-advertise-address masterNodeIP
+### * Installing Helm
+Helm is a package manager for Kubernetes, allowing you to define, install, and upgrade even the most complex Kubernetes applications.
+
+Run the Helm Setup Playbook:
+```sh
+ansible-playbook -i inventory/hosts.yaml helm_setup.yaml
+```
+This playbook executes the tasks defined under roles/helm-setup, ensuring that Helm is properly installed and configured on your cluster..
+
+
+### * Installing ArgoCD
+ArgoCD is a declarative, GitOps continuous delivery tool for Kubernetes.
+
+Run the ArgoCD Setup Playbook:
+```sh
+ansible-playbook -i inventory/hosts.yaml argocd_setup.yaml
+```
+This playbook carries out the tasks under roles/argocd-setup, ensuring that ArgoCD is correctly installed and configured in your cluster.
+
+
+### Appendix: New master nodes to cluster which is provisioned by virtualbox
+- If you're using VirtualBox and you wish to add a new master node to your cluster, it's important to specify the --apiserver-advertise-address with the IP address of the master node during the join process. This ensures that the new master node advertises its IP address correctly to the rest of the cluster.
+
+- Example command for joining a new master node:
+```sh
+kubeadm join 10.80.24.141:6443 --token <your_token> --discovery-token-ca-cert-hash sha256:<your_hash> --control-plane --certificate-key <your_certificate_key> --apiserver-advertise-address <newMasterNodeIP>
+```
